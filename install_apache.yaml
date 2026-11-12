@@ -1,0 +1,37 @@
+- name: install apache on target servers
+  hosts: client
+  remote_user: ocp
+  become: true
+
+  vars:
+    web: httpd
+    web_content: "Welcome to Ansible Roles \n"
+
+  tasks:
+    - name: install apache on hosts  machine
+      dnf:
+        name: "{{ web }}"
+        state: present
+    
+    - name: Start apache service
+      systemd:
+        name: "{{ web }}"
+        enabled: yes
+        state: started
+
+    - name: copy html file into /var/www/html path
+      copy:
+        content: "{{ web_content }}"
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: '0755'
+      notify:
+        - restart apache
+
+  handlers:
+    - name : restart apache
+      systemd:
+        name : "{{ web }}"
+        state: restarted
+
